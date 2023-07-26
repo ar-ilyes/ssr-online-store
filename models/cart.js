@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 module.exports = class Cart{
-    static addProduct(id){
+    static addProduct(id,price){
         fs.readFile("./data/cart.json",(err,data)=>{
             let cart = {products:[],price:0};
             if(!err){
@@ -13,14 +13,13 @@ module.exports = class Cart{
                     return el.id===id
                 });
                 newcart={...cart};
+                newcart.price+=parseInt(price);
                 if(index===-1){
                     newcart.products.push({id:id,qty:1});
-                    //update price
                 }else{
                     let newproduct={...cart.products[index]};
                     newproduct.qty++;
                     newcart.products[index]=newproduct;
-                    //update price;
                 }
                 fs.writeFile("./data/cart.json",JSON.stringify(newcart),(err)=>{
                     if(err){
