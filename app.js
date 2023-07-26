@@ -7,15 +7,13 @@ app.set("views","views");
 const adminRouter =require("./Routes/admin");
 const shopRouter = require("./Routes/shop");
 
+const errorController=require("./controllers/error");
+
 app.use(bp.urlencoded({extended:false}));
 app.use(express.static(path.join(__dirname,"public")))
 
 app.use('/admin',adminRouter.router);
 app.use(shopRouter);
-app.use((req,res,next)=>{
-    res.status(404).render("404",{title:"Page Not Found"});
-})
-
-
+app.use(errorController.page404);
 
 app.listen(3000);
