@@ -1,35 +1,51 @@
-const { json } = require('express');
 const fs = require('fs');
+const path = require('path');
 
-const getProducts=(cb)=>{
-    fs.readFile("./public/data/products.json", (err, data) => {
-        let products=[];
-        if (err) {
-            console.log(err);
-        } else {
-            products = JSON.parse(data);
-            cb(products);
+const p = path.join(
+  path.dirname(process.mainModule.filename),
+  'data',
+  'products.json'
+);
+
+const getProductsFromFile = cb => {
+  fs.readFile(p, (err, fileContent) => {
+    if (err) {
+      cb([]);
+    } else {
+      cb(JSON.parse(fileContent));
+    }
+  });
+};
+
+module.exports = class Product {
+  constructor(title, imageUrl, description, price) {
+    this.id=(Math.random()*100).toString();
+    this.title = title;
+    this.imageUrl = imageUrl;
+    this.description = description;
+    this.price = price;
+  }
+
+  save() {
+    getProductsFromFile(products => {
+      products.push(this);
+      fs.writeFile(p, JSON.stringify(products), err => {
+        console.log(err);
+      });
+    });
+  }
+
+  static fetchAll(cb) {
+    getProductsFromFile(cb);
+  }
+
+  static FindById(id,cb){
+    getProductsFromFile(products=>{
+      products.map((el)=>{
+        if(el.id===id){
+          cb(el);
         }
+      })
     })
-}
-
-
-module.exports=class Product{
-    constructor(title,desc){
-        this.title=title;
-        this.desc=desc;
-    }
-    save(){
-        fs.readFile("./public/data/products.json",(err,data)=>{
-            getProducts((products)=>{
-                products.push(this);
-                    fs.writeFile("./public/data/products.json",JSON.stringify(products),(err)=>{
-                        console.log(err);
-                    })
-            })
-        })
-    }
-    static FetchAll(cb){
-        getProducts(cb);
-    }
-}
+  }
+};

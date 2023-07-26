@@ -10,3 +10,6 @@ exports.postProduct=(req,res,next)=>{
 exports.GetAllProducts=(req,res,next)=>{
     Product.FetchAll(products=>{ res.render("shop",{title:"shop",products:products,path:"/"});});
 };
+exports.getProductDetails=(req,res,next)=>{
+    Product.FindById(req.params.productId,product=>{res.render("shop/product-detail",{pageTitle:"details",product:product,path:`/product/${req.params.productId}`});});
+}
