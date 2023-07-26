@@ -22,18 +22,26 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  res.render('shop/cart', {
-    path: '/cart',
-    pageTitle: 'Your Cart'
-  });
+  Cart.FetchAll((products)=>{
+    res.render('shop/cart', {
+      path: '/cart',
+      pageTitle: 'Your Cart',
+      products:products,
+    });
+  })
 };
 
 exports.postCart =(req,res,next)=>{
   let productId = req.body.prodId;
   Product.FindById(productId,(product)=>{
-    Cart.addProduct(productId,product.price);
+    Cart.addProduct(product,product.price);
   })
   res.redirect("/cart");
+}
+
+exports.deleteCartItem = (req,res,next)=>{
+  let id=req.body.id;
+  Cart.delete(id,()=>{res.redirect("/cart")});
 }
 
 exports.getOrders = (req, res, next) => {
