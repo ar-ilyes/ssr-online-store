@@ -1,21 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-
-const p = path.join(
-  path.dirname(process.mainModule.filename),
-  'data',
-  'products.json'
-);
-
-const getProductsFromFile = cb => {
-  fs.readFile(p, (err, fileContent) => {
-    if (err) {
-      cb([]);
-    } else {
-      cb(JSON.parse(fileContent));
-    }
-  });
-};
+const db = require("../util/database");
 
 module.exports = class Product {
   constructor(id,title, imageUrl, description, price) {
@@ -27,42 +12,31 @@ module.exports = class Product {
   }
 
   save() {
-    getProductsFromFile(products => {
-      if(this.id){
-        let index=products.findIndex((el)=>{
-          return el.id==this.id;
-        });
-        products[index]=this;
-      }else{
-        this.id=(Math.random()*100).toString();
-        products.push(this);
-      }
-      fs.writeFile(p, JSON.stringify(products), err => {
-        console.log(err);
-      });
-    });
+    if(this.id){
+      db.execute("UPDATE store SET title = ?, price = ?, description= ? ,imageUrl= ?  WHERE id=?",[this.title,this.price,this.description,this.imageUrl,this.id])
+    }else{
+      db.execute("INSERT INTO store (title, price, description, imageUrl) VALUES (?, ?, ?,?)",[this.title,this.price,this.description,this.imageUrl]);
+    }
   }
 
   static delete(id){
-    getProductsFromFile((products)=>{
-      let newProductsList = products.filter(el=>el.id!=id);
-      fs.writeFile(p, JSON.stringify(newProductsList), err => {
-        console.log(err);
-      });
-    });
+    db.execute("DELETE FROM store WHERE id=?",[id]);
   }
 
   static fetchAll(cb) {
-    getProductsFromFile(cb);
+    db.execute("SELECT * FROM store").then((data)=>{
+      cb(data[0])
+    }).catch((err)=>{
+      console.log(err);
+    })
   }
 
+
   static FindById(id,cb){
-    getProductsFromFile(products=>{
-      products.map((el)=>{
-        if(el.id===id){
-          cb(el);
-        }
-      })
+    db.execute("SELECT * FROM store WHERE id=?",[id]).then((data)=>{
+      cb(data[0][0])
+    }).catch((err)=>{
+      console.log(err);
     })
   }
 };
