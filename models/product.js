@@ -13,30 +13,32 @@ module.exports = class Product {
 
   save() {
     if(this.id){
-      db.execute("UPDATE store SET title = ?, price = ?, description= ? ,imageUrl= ?  WHERE id=?",[this.title,this.price,this.description,this.imageUrl,this.id])
+      return db.execute("UPDATE store SET title = ?, price = ?, description= ? ,imageUrl= ?  WHERE id=?",[this.title,this.price,this.description,this.imageUrl,this.id])
     }else{
-      db.execute("INSERT INTO store (title, price, description, imageUrl) VALUES (?, ?, ?,?)",[this.title,this.price,this.description,this.imageUrl]);
+      return db.execute("INSERT INTO store (title, price, description, imageUrl) VALUES (?, ?, ?,?)",[this.title,this.price,this.description,this.imageUrl]);
     }
   }
 
   static delete(id){
-    db.execute("DELETE FROM store WHERE id=?",[id]);
+    return db.execute("DELETE FROM store WHERE id=?",[id]);
   }
 
   static fetchAll(cb) {
-    db.execute("SELECT * FROM store").then((data)=>{
-      cb(data[0])
-    }).catch((err)=>{
-      console.log(err);
-    })
+    return db.execute("SELECT * FROM store");
+    // .then((data)=>{
+    //   cb(data[0])
+    // }).catch((err)=>{
+    //   console.log(err);
+    // })
   }
 
 
   static FindById(id,cb){
-    db.execute("SELECT * FROM store WHERE id=?",[id]).then((data)=>{
-      cb(data[0][0])
-    }).catch((err)=>{
-      console.log(err);
-    })
+    return db.execute("SELECT * FROM store WHERE id=?",[id]);
+    // .then((data)=>{
+    //   cb(data[0][0])
+    // }).catch((err)=>{
+    //   console.log(err);
+    // })
   }
 };
