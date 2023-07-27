@@ -16,11 +16,3 @@ exports.GetAllProducts=(req,res,next)=>{
         })
         .catch((e)=>{console.log(e);});
 };
-exports.getProductDetails=(req,res,next)=>{
-    Product.FindById(req.params.productId)
-        .then(data=>{
-            let product=data[0][0]
-            res.render("shop/product-detail",{pageTitle:"details",product:product,path:`/product/${req.params.productId}`});
-        })
-        .catch((e)=>{console.log(e)});
-}

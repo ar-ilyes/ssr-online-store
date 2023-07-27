@@ -3,7 +3,6 @@ const path = require('path');
 const express = require('express');
 
 const shopController = require('../controllers/shop');
-const productController = require('../controllers/products');
 
 const router = express.Router();
 
@@ -19,7 +18,7 @@ router.get('/orders', shopController.getOrders);
 
 router.get('/checkout', shopController.getCheckout);
 
-router.get('/product/:productId',productController.getProductDetails);
+router.get('/product/:productId',shopController.getProductDetails);
 
 router.post('/cart-delete-item',shopController.deleteCartItem)
 
