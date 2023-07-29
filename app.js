@@ -5,6 +5,8 @@ const User= require("./models/user");
 const Product = require("./models/product");
 const Cart =require("./models/cart");
 const CartItem=require("./models/cartItem");
+const Order=require("./models/order");
+const OrderItem = require("./models/orderItem");
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -43,6 +45,12 @@ Cart.belongsTo(User);
 //many-to-many : product and cart
 Cart.belongsToMany(Product,{through:CartItem});
 Product.belongsToMany(Cart,{through:CartItem});
+//one-to-many : user and order
+User.hasMany(Order);
+Order.belongsTo(User);
+//many-to-many : order and products
+Order.belongsToMany(Product,{through:OrderItem});
+Product.belongsToMany(Order,{through:OrderItem});
 
 app.use(errorController.get404);
 let fetchedUser;
@@ -74,5 +82,3 @@ sequelize.sync()
         app.listen(3000);
     })
     .catch((err)=>{console.log(err)});
-
-
