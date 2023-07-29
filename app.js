@@ -3,6 +3,8 @@ const sequelize =require("./util/database");
 
 const User= require("./models/user");
 const Product = require("./models/product");
+const Cart =require("./models/cart");
+const CartItem=require("./models/cartItem");
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -32,10 +34,18 @@ app.use(
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 
+//one-to-many : user and created products
 User.hasMany(Product);
 Product.belongsTo(User);
+//one-to-one : user and cart
+User.hasOne(Cart);
+Cart.belongsTo(User);
+//many-to-many : product and cart
+Cart.belongsToMany(Product,{through:CartItem});
+Product.belongsToMany(Cart,{through:CartItem});
 
 app.use(errorController.get404);
+let fetchedUser;
 sequelize.sync()
     .then(result =>{
         return User.findByPk(1);
@@ -51,7 +61,16 @@ sequelize.sync()
         }
     })
     .then((user)=>{
-        console.log(user);
+        fetchedUser=user;
+        return user.getCart();
+    })
+    .then((cart)=>{
+        if(!cart){
+            return fetchedUser.createCart()
+        }
+        return cart;
+    })
+    .then(()=>{
         app.listen(3000);
     })
     .catch((err)=>{console.log(err)});

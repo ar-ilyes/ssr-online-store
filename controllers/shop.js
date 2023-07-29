@@ -26,28 +26,73 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  Cart.FetchAll((products)=>{
-    res.render('shop/cart', {
-      path: '/cart',
-      pageTitle: 'Your Cart',
-      products:products,
-    });
-  })
+  req.user.getCart()
+    .then((cart)=>{
+      return cart.getProducts();
+    })
+    .then((products)=>{
+      res.render('shop/cart', {
+        path: '/cart',
+        pageTitle: 'Your Cart',
+        products:products,
+      });
+    })
+    .catch((err)=>{console.log(err);})
 };
 
 exports.postCart =(req,res,next)=>{
   let productId = req.body.prodId;
-  Product.findByPk(productId)
-    .then((product)=>{
-      Cart.addProduct(product,product.price);
+  let fetchedCart;
+  req.user.getCart()
+    .then((cart)=>{
+      fetchedCart=cart;
+      return cart.getProducts({where : {id : productId}})
+    })
+    .then((products)=>{
+      let product=products[0];
+      if(!product){
+        return Product.findByPk(productId)
+          .then((prod)=>{
+            return fetchedCart.addProduct(prod,{through:{qty : 1}});
+          })
+          .catch((err)=>{
+            console.log(err);
+          })
+      }else{
+        let newQty =parseInt(product.cartitem.qty)+1;
+        return fetchedCart.addProduct(product,{through:{qty : newQty }});
+      }
+    })
+    .then(()=>{
       res.redirect("/cart");
     })
-    .catch((e)=>{console.log(e)});
+    .catch((err)=>{
+      console.log(err);
+    })
 }
 
 exports.deleteCartItem = (req,res,next)=>{
-  let id=req.body.id;
-  Cart.delete(id,()=>{res.redirect("/cart")});
+  let id=req.body.productId;
+  let fetchedCart;
+  req.user.getCart()
+      .then((cart)=>{
+        fetchedCart=cart;
+        return cart.getProducts({where : {id:id}})
+      })
+      .then((products)=>{
+        let product=products[0];
+        if(product.cartitem.qty>1){
+          let newQty=product.cartitem.qty-1;
+          return fetchedCart.addProduct(product,{through:{qty:newQty}});
+        }else{
+          return fetchedCart.removeProduct(product);
+        }
+      }).then(()=>{
+        res.redirect("/cart")
+      })
+      .catch((err)=>{
+        console.log(err);
+      })
 }
 
 exports.getOrders = (req, res, next) => {
