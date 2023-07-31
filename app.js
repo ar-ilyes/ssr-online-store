@@ -1,6 +1,6 @@
 const path = require('path');
-const sequelize =require("./util/database");
-
+const sequelize =require('sequelize');
+const mongoose = require('mongoose');
 const User= require("./models/user");
 const Product = require("./models/product");
 const Cart =require("./models/cart");
@@ -53,6 +53,12 @@ Order.belongsToMany(Product,{through:OrderItem});
 Product.belongsToMany(Order,{through:OrderItem});
 
 app.use(errorController.get404);
+// mongoose.connect("mongodb+srv://ilyesDB:15022004@cluster0.9uivabz.mongodb.net/market?retryWrites=true&w=majority")
+//     .then(()=>{
+//         app.listen(3000);
+//     })
+//     .catch(e=>console.log(e))
+
 let fetchedUser;
 sequelize.sync()
     .then(result =>{
@@ -79,6 +85,6 @@ sequelize.sync()
         return cart;
     })
     .then(()=>{
-        app.listen(3000);
+       
     })
     .catch((err)=>{console.log(err)});
