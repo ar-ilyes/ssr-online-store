@@ -16,14 +16,14 @@ exports.postAddProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  req.user.createProduct({
-    title:title,
-    description:description,
-    price:price,
-    imageUrl:imageUrl,
-  }).then(()=>{
+const product = new Product({ title, imageUrl, price, description });
+product.save()
+  .then((prod) => {
     res.redirect('/');
-  }).catch((err)=>{console.log(err)});
+  })
+  .catch((err) => {
+    res.status(500).send("Failed to save product.");
+  });
 };
 
 exports.getEditProduct =(req,res,next)=>{
@@ -34,9 +34,8 @@ exports.getEditProduct =(req,res,next)=>{
   }else if(editing==="false"){
     editing=false;
   }
-  req.user.getProducts({where : {id : productId}})
-    .then((products)=>{
-      let product=products[0];
+  Product.findById(productId)
+    .then((product)=>{
       res.render('admin/add-product', {
         pageTitle: 'Add Product',
         path: '/admin/edit-product',
@@ -56,9 +55,8 @@ exports.postEditProduct = (req, res, next) => {
   const imageUrl = req.body.imageUrl;
   const price = req.body.price;
   const description = req.body.description;
-  req.user.getProducts({where : {id : id}})
-    .then((products)=>{
-      let product=products[0];
+  Product.findById(id)
+    .then((product)=>{
       product.title=title;
       product.price=price;
       product.description=description;
@@ -72,11 +70,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.deleteProduct = (req,res,next)=>{
   const id = req.body.id;
-  req.user.getProducts({where : {id : id}})
-      .then((products)=>{
-        let product=products[0];
-        return product.destroy();
-      })
+  Product.deleteOne({_id:id})
       .then(()=>{
         res.redirect('/admin/products');
       })
@@ -84,7 +78,7 @@ exports.deleteProduct = (req,res,next)=>{
 }
 
 exports.getProducts = (req, res, next) => {
-  req.user.getProducts()
+  Product.find()
   .then((products)=>{
     res.render('admin/products', {
       prods: products,

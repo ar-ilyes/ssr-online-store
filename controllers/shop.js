@@ -1,8 +1,10 @@
 const Product = require('../models/product');
 const Cart = require("../models/cart");
+const mongoose= require('mongoose');
+
 
 exports.getProducts = (req, res, next) => {
-  Product.findAll()
+  Product.find()
     .then(products => {
       res.render('shop/product-list', {
         prods: products,
@@ -14,7 +16,7 @@ exports.getProducts = (req, res, next) => {
 };
 
 exports.getIndex = (req, res, next) => {
-  Product.findAll()
+  Product.find()
     .then(products => {
       res.render('shop/index', {
         prods: products,
@@ -113,7 +115,7 @@ exports.getCheckout = (req, res, next) => {
   });
 };
 exports.getProductDetails=(req,res,next)=>{
-  Product.findByPk(req.params.productId)
+  Product.findById(req.params.productId)
       .then(product=>{
           res.render("shop/product-detail",{pageTitle:"details",product:product,path:`/product/${req.params.productId}`});
       })
