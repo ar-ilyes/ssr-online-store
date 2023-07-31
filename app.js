@@ -1,6 +1,6 @@
 const path = require('path');
 const sequelize =require('sequelize');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const User= require("./models/user");
 const Product = require("./models/product");
 const Cart =require("./models/cart");
