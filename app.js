@@ -1,8 +1,8 @@
 const path = require('path');
 const mongoose = require('mongoose');
 
+const User= require("./models/user");
 
-// const User= require("./models/user");
 // const Product = require("./models/product");
 // const Cart =require("./models/cart");
 // const CartItem=require("./models/cartItem");
@@ -24,15 +24,15 @@ const shopRoutes = require('./routes/shop');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-// app.use(
-//     (req,res,next)=>{
-//     User.findByPk(1)
-//     .then((user)=>{
-//         req.user=user;
-//         next();
-//     })
-//     .catch((err)=>{console.log(err)})
-// });
+app.use(
+    (req,res,next)=>{
+    User.findById('64c8e24d73280ab24d8b8177')
+    .then((user)=>{
+        req.user=user;
+        next();
+    })
+    .catch((err)=>{console.log(err)})
+});
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
@@ -56,6 +56,23 @@ app.use(shopRoutes);
 app.use(errorController.get404);
 mongoose.connect("mongodb+srv://ilyesDB:15022004@cluster0.9uivabz.mongodb.net/market?retryWrites=true&w=majority")
     .then(()=>{
+        return User.findOne()
+    })
+    .then((user)=>{
+        if(!user){
+            const user = new User({
+                name:"ilyes",
+                email:"armilyes@gmail.com",
+                cart:{
+                    items:[],
+                    price:0,
+                }
+            });
+            return user.save();
+        }
+        return user
+    })
+    .then((user)=>{
         app.listen(3000);
     })
     .catch(e=>console.log(e))
