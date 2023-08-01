@@ -26,6 +26,25 @@ const userSchema = new mongoose.Schema({
         }
     }
 });
+userSchema.methods.addCartItem = function(product){
+    const productIndex = this.cart.items.findIndex((prod)=>{
+        return prod.productId.toString()===product._id.toString();
+    })
+    if(productIndex<0){
+        this.cart.items.push({productId:product._id,qty:1});
+    }else{
+        this.cart.items[productIndex].qty++;
+    }
+    return this.save();
+}
+
+userSchema.methods.deleteCartItem = function(product){
+    const newItems = this.cart.items.filter((prod)=>{
+        return prod.productId.toString()!==product._id.toString();
+    })
+    this.cart.items=newItems;
+    return this.save();
+}
 
 const User=mongoose.model("User",userSchema);
 
