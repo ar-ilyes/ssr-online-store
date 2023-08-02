@@ -2,7 +2,8 @@ const Product = require('../models/product');
 const Cart = require("../models/cart");
 const mongoose= require('mongoose');
 const product = require('../models/product');
-
+const Order = require("../models/order");
+const User = require('../models/user');
 
 exports.getProducts = (req, res, next) => {
   Product.find()
@@ -96,7 +97,7 @@ exports.deleteCartItem = (req,res,next)=>{
 }
 
 exports.getOrders = (req, res, next) => {
-  req.user.getOrders({include:['products']})
+  Order.find({"user.userId":req.user._id})
   .then((orders)=>{
     res.render("shop/orders",{
       path: '/orders',
@@ -121,28 +122,57 @@ exports.getProductDetails=(req,res,next)=>{
 }
 
 exports.postCheckout=(req,res,next)=>{
-  let fetchedCart;
-  req.user.getCart()
-    .then((cart)=>{
-      fetchedCart=cart;
-      return cart.getProducts();
+  req.user.populate('cart.items.productId')
+  .then((user)=>{
+    let orderProducts=user.cart.items.map((p)=>{
+      return {
+        quantity:p.qty,
+        productDetail:{...p.productId._doc},
+      }
     })
-    .then((products)=>{
-      return products.forEach(product => {
-        req.user.createOrder()
-          .then((order)=>{
-            return order.addProduct(product,{through:{qty:product.cartitem.qty}})
-          })
-          .catch(err=>console.log(err))
-      });
+    let order=new Order({
+      user:{
+        name:req.user.name,
+        userId:req.user,
+      },
+      products:orderProducts,
     })
-    .then(()=>{
-      return fetchedCart.setProducts(null);
-    })
-    .then(()=>{
-      res.redirect("/orders");
-    })
-    .catch((err)=>{
-      console.log(err);
-    })
+    return order.save();
+  })
+  .then((order)=>{
+    console.log(order)
+    req.user.cart.items=[];
+    req.user.cart.price=0;
+    return req.user.save();
+  })
+  .then(()=>{
+    res.redirect("/orders");
+  })
+  .catch((err)=>{
+    console.log(err);
+  })
+  // let fetchedCart;
+  // req.user.getCart()
+  //   .then((cart)=>{
+  //     fetchedCart=cart;
+  //     return cart.getProducts();
+  //   })
+  //   .then((products)=>{
+  //     return products.forEach(product => {
+  //       req.user.createOrder()
+  //         .then((order)=>{
+  //           return order.addProduct(product,{through:{qty:product.cartitem.qty}})
+  //         })
+  //         .catch(err=>console.log(err))
+  //     });
+  //   })
+  //   .then(()=>{
+  //     return fetchedCart.setProducts(null);
+  //   })
+  //   .then(()=>{
+  //     res.redirect("/orders");
+  //   })
+  //   .catch((err)=>{
+  //     console.log(err);
+  //   })
 }
