@@ -1,107 +1,76 @@
 const path = require('path');
-const mongoose = require('mongoose');
-
-const User= require("./models/user");
-
-// const Product = require("./models/product");
-// const Cart =require("./models/cart");
-// const CartItem=require("./models/cartItem");
-// const Order=require("./models/order");
-// const OrderItem = require("./models/orderItem");
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 
 const errorController = require('./controllers/error');
+const User = require('./models/user');
+
+const MONGODB_URI =
+  'mongodb+srv://ilyesDB:15022004@cluster0.9uivabz.mongodb.net/market?retryWrites=true&w=majority';
 
 const app = express();
+const store = new MongoDBStore({
+  uri: MONGODB_URI,
+  collection: 'sessions'
+});
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(
-    (req,res,next)=>{
-    User.findById('64c8e24d73280ab24d8b8177')
-    .then((user)=>{
-        req.user=user;
-        next();
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store
+  })
+);
+
+app.use((req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      req.user = user;
+      next();
     })
-    .catch((err)=>{console.log(err)})
+    .catch(err => console.log(err));
 });
 
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
-
-// //one-to-many : user and created products
-// User.hasMany(Product);
-// Product.belongsTo(User);
-// //one-to-one : user and cart
-// User.hasOne(Cart);
-// Cart.belongsTo(User);
-// //many-to-many : product and cart
-// Cart.belongsToMany(Product,{through:CartItem});
-// Product.belongsToMany(Cart,{through:CartItem});
-// //one-to-many : user and order
-// User.hasMany(Order);
-// Order.belongsTo(User);
-// //many-to-many : order and products
-// Order.belongsToMany(Product,{through:OrderItem});
-// Product.belongsToMany(Order,{through:OrderItem});
+app.use(authRoutes);
 
 app.use(errorController.get404);
-mongoose.connect("mongodb+srv://ilyesDB:15022004@cluster0.9uivabz.mongodb.net/market?retryWrites=true&w=majority")
-    .then(()=>{
-        return User.findOne()
-    })
-    .then((user)=>{
-        if(!user){
-            const user = new User({
-                name:"ilyes",
-                email:"armilyes@gmail.com",
-                cart:{
-                    items:[],
-                    price:0,
-                }
-            });
-            return user.save();
-        }
-        return user
-    })
-    .then((user)=>{
-        app.listen(3000);
-    })
-    .catch(e=>console.log(e))
 
-// let fetchedUser;
-// sequelize.sync()
-//     .then(result =>{
-//         return User.findByPk(1);
-//     })
-//     .then((user)=>{
-//         if(!user){
-//             return User.create({
-//                 name:"ilyes",
-//                 email:"arailyesarbet@gmail.com"
-//             })
-//         }else{
-//             return user
-//         }
-//     })
-//     .then((user)=>{
-//         fetchedUser=user;
-//         return user.getCart();
-//     })
-//     .then((cart)=>{
-//         if(!cart){
-//             return fetchedUser.createCart()
-//         }
-//         return cart;
-//     })
-//     .then(()=>{
-//     })
-//     .catch((err)=>{console.log(err)});
+mongoose
+  .connect(MONGODB_URI,{ useNewUrlParser: true,useUnifiedTopology: true  })
+  .then(result => {
+    User.findOne().then(user => {
+      if (!user) {
+        const user = new User({
+          name: 'Max',
+          email: 'max@test.com',
+          cart: {
+            items: []
+          }
+        });
+        user.save();
+      }
+    });
+    app.listen(3000);
+  })
+  .catch(err => {
+    console.log(err);
+  });

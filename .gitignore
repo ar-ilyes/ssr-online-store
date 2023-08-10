@@ -1,7 +1,1 @@
-# Ignore Node.js related files and directories
-node_modules/
-npm-debug.log*
-yarn-error.log*
-.pnp/
-.pnp.js
-*.env
+node_modules
